@@ -1,0 +1,20 @@
+sudo: required
+services: 
+  - docker
+before_install:
+  - docker build -t rabbittracey/react-test -f .client/Dockerfile.dev ./client
+
+script:
+  - docker run rabbittracey/react-test npm test -- --coverage 
+
+after_success: 
+  - docker build -t rabbittracey/multi-client ./client
+  - docker build -t rabbittracey/multi-nginx ./nginx
+  - docker build -t rabbittracey/multi-client ./client
+  - docker build -t rabbittracey/multi-server ./server
+  #log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push rabbittracey/multi-client
+  - docker push rabbittracey/multi-nginx
+  - docker push rabbittracey/multi-server
+  - docker push rabbittracey/multi-worker
